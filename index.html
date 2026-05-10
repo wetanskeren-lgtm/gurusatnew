@@ -163,34 +163,20 @@ body{font-family:'Source Sans 3',sans-serif;background:#0f1923;color:#e8ecf1;min
         <div id="rKelasWrap" style="display:none"><label class="text-xs text-muted block mb-1">Kelas</label>
           <select id="rKelas" class="input-field">
             <option value="">-- Pilih --</option>
-            <option value="Kelas 1">Kelas 1</option>
-            <option value="Kelas 2">Kelas 2</option>
-            <option value="Kelas 3">Kelas 3</option>
-            <option value="Kelas 4">Kelas 4</option>
-            <option value="Kelas 5">Kelas 5</option>
+            <option value="Kelas 1">Kelas 1</option><option value="Kelas 2">Kelas 2</option><option value="Kelas 3">Kelas 3</option><option value="Kelas 4">Kelas 4</option><option value="Kelas 5">Kelas 5</option>
           </select>
         </div>
         <div><label class="text-xs text-muted block mb-1">Rombel</label>
           <select id="rRombel" class="input-field">
-            <option value="">-- Pilih --</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
+            <option value="">-- Pilih --</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
           </select>
         </div>
         <div><label class="text-xs text-muted block mb-1">Buat Password</label>
-          <div class="pw-wrap">
-            <input type="password" id="rPW" class="input-field" placeholder="Minimal 6 karakter" oninput="checkPWStrength()">
-            <button type="button" class="pw-toggle" onclick="togPW('rPW',this)"><i class="fas fa-eye"></i></button>
-          </div>
+          <div class="pw-wrap"><input type="password" id="rPW" class="input-field" placeholder="Minimal 6 karakter" oninput="checkPWStrength()"><button type="button" class="pw-toggle" onclick="togPW('rPW',this)"><i class="fas fa-eye"></i></button></div>
           <div id="pwStrength" class="mt-1 text-xs" style="display:none"></div>
         </div>
         <div><label class="text-xs text-muted block mb-1">Konfirmasi Password</label>
-          <div class="pw-wrap">
-            <input type="password" id="rPW2" class="input-field" placeholder="Ulangi password">
-            <button type="button" class="pw-toggle" onclick="togPW('rPW2',this)"><i class="fas fa-eye"></i></button>
-          </div>
+          <div class="pw-wrap"><input type="password" id="rPW2" class="input-field" placeholder="Ulangi password"><button type="button" class="pw-toggle" onclick="togPW('rPW2',this)"><i class="fas fa-eye"></i></button></div>
         </div>
       </div>
       <button type="button" onclick="doGuruReg()" class="btn-primary w-full mt-4"><i class="fas fa-user-plus mr-2"></i>Daftar</button>
@@ -260,59 +246,42 @@ function checkPWStrength(){var pw=document.getElementById('rPW').value;var el=do
 /* ===== REGISTRASI GURU ===== */
 function doGuruReg(){
   var npsn=document.getElementById('rNPSN').value.trim(),sekolah=document.getElementById('rSekolah').value.trim(),nip=document.getElementById('rNIP').value.trim(),nama=document.getElementById('rNama').value.trim(),jenis=document.getElementById('rJenis').value,kelas=document.getElementById('rKelas').value,rombel=document.getElementById('rRombel').value,pw=document.getElementById('rPW').value,pw2=document.getElementById('rPW2').value;
-  if(!npsn){showToast('NPSN wajib diisi','error');document.getElementById('rNPSN').focus();return}
-  if(!sekolah){showToast('Nama Sekolah wajib diisi','error');document.getElementById('rSekolah').focus();return}
-  if(!nip||nip.length<5){showToast('NIP minimal 5 karakter','error');document.getElementById('rNIP').focus();return}
-  if(!nama){showToast('Nama Guru wajib diisi','error');document.getElementById('rNama').focus();return}
-  if(!jenis){showToast('Pilih Jenis Guru','error');document.getElementById('rJenis').focus();return}
-  if(jenis==='guru kelas'&&!kelas){showToast('Pilih Kelas','error');document.getElementById('rKelas').focus();return}
-  if(!rombel){showToast('Pilih Rombel','error');document.getElementById('rRombel').focus();return}
-  if(!pw||pw.length<6){showToast('Password minimal 6 karakter','error');document.getElementById('rPW').focus();return}
-  if(pw!==pw2){showToast('Password tidak cocok','error');document.getElementById('rPW2').focus();return}
-
-  var hashedPW=simpleHash(pw);
-  showAuthLoad('Memeriksa NIP di semua database...');
+  if(!npsn){showToast('NPSN wajib diisi','error');return}if(!sekolah){showToast('Nama Sekolah wajib diisi','error');return}if(!nip||nip.length<5){showToast('NIP minimal 5 karakter','error');return}if(!nama){showToast('Nama Guru wajib diisi','error');return}if(!jenis){showToast('Pilih Jenis Guru','error');return}if(jenis==='guru kelas'&&!kelas){showToast('Pilih Kelas','error');return}if(!rombel){showToast('Pilih Rombel','error');return}if(!pw||pw.length<6){showToast('Password minimal 6 karakter','error');return}if(pw!==pw2){showToast('Password tidak cocok','error');return}
+  var hashedPW=simpleHash(pw);showAuthLoad('Memeriksa NIP...');
   var checkPromises=KELAS_LIST.map(function(k){var db=getDB(k);if(!db)return Promise.resolve(null);return db.collection('guru').where('nip','==',nip).limit(1).get().then(function(s){if(s.empty)return null;return{kelas:k,id:s.docs[0].id}}).catch(function(){return null})});
-  var teacherPromises=KELAS_LIST.map(function(k){var db=getDB(k);if(!db)return Promise.resolve(null);return db.collection('teachers').where('nip','==',nip).limit(1).get().then(function(s){if(s.empty)return null;return{kelas:k,source:'teachers'}}).catch(function(){return null})});
-
-  Promise.all(checkPromises.concat(teacherPromises)).then(function(results){
-    for(var i=0;i<results.length;i++){if(results[i]){hideAuthLoad();showToast('NIP sudah terdaftar di '+(results[i].source==='teachers'?'sistem admin ':'')+results[i].kelas+'!','error');return}}
-    var targetKelas=(jenis==='guru kelas')?kelas:'Kelas 1';
-    var db=getDB(targetKelas);if(!db){hideAuthLoad();showToast('Database error','error');return}
+  Promise.all(checkPromises).then(function(results){
+    for(var i=0;i<results.length;i++){if(results[i]){hideAuthLoad();showToast('NIP sudah terdaftar di '+results[i].kelas+'!','error');return}}
+    var targetKelas=(jenis==='guru kelas')?kelas:'Kelas 1';var db=getDB(targetKelas);if(!db){hideAuthLoad();showToast('Database error','error');return}
     showAuthLoad('Menyimpan data...');
-    db.collection('guru').add({npsn:npsn,sekolah:sekolah,nip:nip,nama:nama,jenis:jenis,kelas:(jenis==='guru kelas')?kelas:'',rombel:rombel,password:hashedPW,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){hideAuthLoad();showToast('Registrasi berhasil!');showAuthTab('login');document.getElementById('lNIP').value=nip;document.getElementById('rNPSN').value='';document.getElementById('rSekolah').value='';document.getElementById('rNIP').value='';document.getElementById('rNama').value='';document.getElementById('rJenis').value='';document.getElementById('rKelas').value='';document.getElementById('rRombel').value='';document.getElementById('rPW').value='';document.getElementById('rPW2').value='';document.getElementById('pwStrength').style.display='none';document.getElementById('rKelasWrap').style.display='none'}).catch(function(err){hideAuthLoad();showToast('Gagal: '+err.message,'error')})
+    db.collection('guru').add({npsn:npsn,sekolah:sekolah,nip:nip,nama:nama,jenis:jenis,kelas:(jenis==='guru kelas')?kelas:'',rombel:rombel,password:hashedPW,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(){hideAuthLoad();showToast('Registrasi berhasil!');showAuthTab('login');document.getElementById('lNIP').value=nip}).catch(function(err){hideAuthLoad();showToast('Gagal: '+err.message,'error')})
   }).catch(function(err){hideAuthLoad();showToast('Gagal: '+err.message,'error')})
 }
 
-/* ===== LOGIN GURU ===== */
+/* ===== LOGIN GURU (DIPERBAIKI - HAPUS VALIDASI KOLEKSI TEACHERS) ===== */
 function doGuruLogin(){
   var nip=document.getElementById('lNIP').value.trim(),pw=document.getElementById('lPW').value;
-  if(!nip){showToast('Masukkan NIP','error');document.getElementById('lNIP').focus();return}
-  if(!pw){showToast('Masukkan Password','error');document.getElementById('lPW').focus();return}
-  var hashedPW=simpleHash(pw);
-  showAuthLoad('Mencari data guru...');
+  if(!nip){showToast('Masukkan NIP','error');return}if(!pw){showToast('Masukkan Password','error');return}
+  var hashedPW=simpleHash(pw);showAuthLoad('Mencari data guru...');
+  
+  /* Hanya cari di koleksi 'guru' (karena registrasi juga ke 'guru') */
   var searchPromises=KELAS_LIST.map(function(k){var db=getDB(k);if(!db)return Promise.resolve(null);return db.collection('guru').where('nip','==',nip).limit(1).get().then(function(s){if(s.empty)return null;var d=s.docs[0].data();d._id=s.docs[0].id;d._db=k;return d}).catch(function(){return null})});
+  
   Promise.all(searchPromises).then(function(results){
     var found=null;for(var i=0;i<results.length;i++){if(results[i]){found=results[i];break}}
     if(!found){hideAuthLoad();showToast('NIP tidak ditemukan. Daftar dulu.','error');return}
     if(found.password&&found.password!==hashedPW){hideAuthLoad();showToast('Password salah!','error');return}
-    var targetDB=(found.jenis==='guru kelas'&&found.kelas)?found.kelas:'Kelas 1';
-    var checkDB=getDB(targetDB);
-    if(checkDB){showAuthLoad('Memverifikasi status...');checkDB.collection('teachers').where('nip','==',nip).limit(1).get().then(function(ts){hideAuthLoad();if(!ts.empty){var td=ts.docs[0].data();if(td.active===false){showToast('Akun dinonaktifkan oleh admin.','error');return}}finishLogin(found)}).catch(function(){hideAuthLoad();finishLogin(found)})}
-    else{hideAuthLoad();finishLogin(found)}
+    hideAuthLoad();finishLogin(found);
   }).catch(function(err){hideAuthLoad();showToast('Gagal: '+err.message,'error')})
 }
+
 function finishLogin(found){
   gData=found;activeClass=(found.jenis==='guru kelas'&&found.kelas)?found.kelas:'Kelas 1';
   _lockLoaded=false;_featureLocks={};_globalLocks={};
   document.getElementById('authPage').style.display='none';document.getElementById('mainPage').classList.remove('hidden');
-  document.getElementById('guruInfo').textContent=found.nama.substring(0,20);
-  document.getElementById('headerGuru').textContent=found.nama;
+  document.getElementById('guruInfo').textContent=found.nama.substring(0,20);document.getElementById('headerGuru').textContent=found.nama;
   var kelasLabel=(found.jenis==='guru kelas')?found.kelas+' '+found.rombel:found.jenis.toUpperCase()+' '+found.rombel;
   document.getElementById('headerKelas').textContent=kelasLabel;
-  navTo('dashboard');loadFeatureLocks();
-  document.getElementById('lNIP').value='';document.getElementById('lPW').value='';
-  showToast('Selamat datang, '+found.nama);
+  navTo('dashboard');loadFeatureLocks();document.getElementById('lNIP').value='';document.getElementById('lPW').value='';showToast('Selamat datang, '+found.nama);
 }
 function doLogout(){gData=null;activeClass='';_lockLoaded=false;_featureLocks={};_globalLocks={};document.getElementById('mainPage').classList.add('hidden');document.getElementById('authPage').style.display='';document.getElementById('lNIP').value='';document.getElementById('lPW').value='';showAuthTab('login');showToast('Berhasil keluar')}
 
@@ -327,51 +296,21 @@ function filterBar(id){var h='<div class="grid md:grid-cols-2 gap-4 mb-4"><div><
 function getFilter(p){return{mapel:document.getElementById(p+'M').value,kelas:document.getElementById(p+'K').value}}
 function fetchSoal(mapel,kelas){var db=getDB(activeClass);if(!db)return Promise.resolve([]);var q=db.collection('questions');if(mapel)q=q.where('mapel','==',mapel);if(kelas)q=q.where('kelas','==',kelas);return q.get().then(function(s){var d=[];s.forEach(function(doc){d.push(doc.data())});return sByT(d,false)}).catch(function(){return[]})}
 
-/* ===== FIX UTAMA: fetchSiswaRombel sekarang menyertakan doc.id ===== */
+/* ===== FETCH SISWA DIPERBAIKI (HANYA KOLEKSI SISWA) ===== */
 function fetchSiswaRombel(){
-  var db=getDB(activeClass);
-  if(!db)return Promise.resolve([]);
-  var rombel=getGuruRombel();
-  return Promise.all([
-    db.collection('students').get().catch(function(){return{empty:true,forEach:function(){}}}),
-    db.collection('siswa').get().catch(function(){return{empty:true,forEach:function(){}}})
-  ]).then(function(r){
-    var map={};
-    /* Collection 'students' — sertakan doc.id sebagai _id dan _collection */
-    r[0].forEach(function(doc){
-      var t=doc.data();
-      if(t.rombel===rombel&&t.active!==false){
-        t._id=doc.id;
-        t._collection='students';
-        map[t.nisn||('_'+doc.id)]=t;
-      }
-    });
-    /* Collection 'siswa' — sertakan doc.id sebagai _id dan _collection */
-    r[1].forEach(function(doc){
-      var t=doc.data();
-      var key=t.nisn||('_'+doc.id);
-      if(t.rombel===rombel&&!map[key]){
-        t._id=doc.id;
-        t._collection='siswa';
-        map[key]=t;
-      }
-    });
-    var arr=[];
-    for(var k in map)arr.push(map[k]);
+  var db=getDB(activeClass);if(!db)return Promise.resolve([]);var rombel=getGuruRombel();
+  return db.collection('siswa').where('rombel','==',rombel).get().then(function(snap){
+    var arr=[];snap.forEach(function(doc){var t=doc.data();t._id=doc.id;t._collection='siswa';if(t.active!==false)arr.push(t)});
     return arr.sort(function(a,b){return(a.nama||'').localeCompare(b.nama||'')})
-  })
+  }).catch(function(){return[]})
 }
-
 function fetchTokensGuru(){var db=getDB(activeClass);if(!db)return Promise.resolve([]);return db.collection('tokens').get().then(function(s){var d=[];s.forEach(function(doc){var t=doc.data();t._id=doc.id;d.push(t)});var nip=gData?gData.nip:'',rombel=getGuruRombel();d=d.filter(function(x){return x.guruNip===nip&&x.rombel===rombel});d.sort(function(a,b){return((b.createdAt||{}).seconds||0)-((a.createdAt||{}).seconds||0)});return d}).catch(function(){return[]})}
 function fetchNilai(mapel,kelas){var db=getDB(kelas||activeClass);if(!db)return Promise.resolve([]);return db.collection('nilai').get().then(function(s){var d=[];s.forEach(function(doc){d.push(doc.data())});var rombel=getGuruRombel();d=d.filter(function(x){return x.mapel===mapel&&x.rombel===rombel&&(!kelas||x.kelas===kelas)});return d.sort(function(a,b){return(a.nama||'').localeCompare(b.nama||'')})}).catch(function(){return[]})}
-function cekNISN(nisn){var db=getDB(activeClass);if(!db)return Promise.resolve(false);var rombel=getGuruRombel();return Promise.all([db.collection('students').get().catch(function(){return{forEach:function(){}}}),db.collection('siswa').get().catch(function(){return{forEach:function(){}}})]).then(function(r){var dup=false;r[0].forEach(function(doc){var t=doc.data();if(t.nisn===nisn&&t.rombel===rombel)dup=true});r[1].forEach(function(doc){var t=doc.data();if(t.nisn===nisn&&t.rombel===rombel)dup=true});return dup})}
+function cekNISN(nisn){var db=getDB(activeClass);if(!db)return Promise.resolve(false);var rombel=getGuruRombel();return db.collection('siswa').where('nisn','==',nisn).where('rombel','==',rombel).limit(1).get().then(function(s){return!s.empty}).catch(function(){return false})}
 document.addEventListener('change',function(e){if(e.target.id&&e.target.id.match(/^[a-z]+K$/)){var v=e.target.value;if(v&&getGuruKelas().indexOf(v)>-1){activeClass=v;document.getElementById('headerKelas').textContent=v+' '+getGuruRombel();_lockLoaded=false;_featureLocks={};_globalLocks={};loadFeatureLocks()}}});
 
 /* ==================== DASHBOARD ==================== */
-function rDash(c){var h='<div class="fade-in space-y-6"><div class="card border-kopAccent/30 bg-kopAccent/5"><div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-gradient-to-br from-kopAccent to-yellow-600 flex items-center justify-center"><i class="fas fa-user text-kop text-xl"></i></div><div><h3 class="text-lg font-bold text-light">'+gData.nama+'</h3><p class="text-sm text-kopAccent font-semibold">'+gData.jenis.toUpperCase()+'</p><p class="text-xs text-muted">'+gData.sekolah+' &bull; NPSN: '+gData.npsn+'</p></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div class="stat-box"><div class="text-xs text-muted">NIP</div><div class="text-sm font-bold text-light mt-1">'+gData.nip+'</div></div><div class="stat-box"><div class="text-xs text-muted">Kelas</div><div class="text-sm font-bold text-kopAccent mt-1">'+(gData.kelas||'1-5')+'</div></div><div class="stat-box"><div class="text-xs text-muted">Rombel</div><div class="text-sm font-bold text-info mt-1">'+gData.rombel+'</div></div><div class="stat-box"><div class="text-xs text-muted">Keamanan</div><div class="text-sm font-bold '+(gData.password?'text-success':'text-warning')+' mt-1">'+(gData.password?'<i class="fas fa-shield-alt mr-1"></i>Terproteksi':'<i class="fas fa-exclamation-triangle mr-1"></i>Tanpa PW')+'</div></div></div></div>';
-  var lockedFeatures=[];for(var fid in _globalLocks){if(_globalLocks[fid]===true)lockedFeatures.push({id:fid,scope:'Global'})}for(var fid in _featureLocks){if(_featureLocks[fid]===true&&!_globalLocks[fid])lockedFeatures.push({id:fid,scope:'Per Guru'})}
-  if(lockedFeatures.length>0){h+='<div class="card border-danger/30 bg-danger/5"><div class="flex items-center gap-3 mb-3"><i class="fas fa-exclamation-triangle text-danger"></i><h4 class="font-bold text-danger text-sm">'+lockedFeatures.length+' Fitur Dikunci</h4></div><div class="space-y-2">';var featNames={access_soal:'Bank Soal',create_soal:'Buat Soal',edit_soal:'Edit Soal',delete_soal:'Hapus Soal',access_tp:'Tujuan Pembelajaran',create_tp:'Buat TP',print_soal:'Cetak Soal',print_kisi:'Cetak Kisi-Kisi',print_kunci:'Cetak Kunci',pensekoran:'Pensekoran',access_siswa:'Data Siswa',manage_siswa:'Kelola Siswa',token_ujian:'Token Ujian',koreksi_nilai:'Koreksi Nilai',cetak_nilai:'Cetak Nilai',kartu_login:'Kartu Login'};lockedFeatures.forEach(function(lf){var nm=featNames[lf.id]||lf.id;h+='<div class="flex items-center justify-between p-2 rounded bg-dark/30"><span class="text-sm text-light">'+nm+'</span><span class="text-xs px-2 py-0.5 rounded '+(lf.scope==='Global'?'bg-kopAccent/15 text-kopAccent':'bg-danger/15 text-danger')+'">'+lf.scope+'</span></div>'});h+='</div><p class="text-xs text-muted mt-3"><i class="fas fa-info-circle mr-1"></i>Hubungi administrator untuk membuka akses.</p></div>'}
-  h+='<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">';getGuruKelas().forEach(function(k){h+='<div class="card text-center cursor-pointer hover:brightness-110 transition-all border-l-4 '+(k===activeClass?'border-kopAccent bg-kopAccent/5':'border-border bg-dark/20')+'" onclick="activeClass=\''+k+'\';navTo(\'bank-soal\')"><div class="text-xs text-muted uppercase mb-1">'+k+'</div><div class="text-xl font-bold '+(k===activeClass?'text-kopAccent':'text-light')+'">Rombel '+getGuruRombel()+'</div><div id="dashStat'+k.replace(/\s/g,'')+'" class="text-xs text-muted mt-1">...</div>'+(k===activeClass?'<div class="mt-2"><span class="pulse-dot bg-success inline-block mr-1"></span><span class="text-xs text-success font-bold">AKTIF</span></div>':'')+'</div>'});h+='</div></div>';c.innerHTML=h;getGuruKelas().forEach(function(k){var db=getDB(k);if(!db)return;db.collection('questions').get().then(function(s){var f=[];s.forEach(function(doc){var d=doc.data();if(d.kelas===k)f.push(d)});var el=document.getElementById('dashStat'+k.replace(/\s/g,''));if(el)el.textContent=f.length+' soal'}).catch(function(){})})}
+function rDash(c){var h='<div class="fade-in space-y-6"><div class="card border-kopAccent/30 bg-kopAccent/5"><div class="flex items-center gap-4 mb-4"><div class="w-14 h-14 rounded-full bg-gradient-to-br from-kopAccent to-yellow-600 flex items-center justify-center"><i class="fas fa-user text-kop text-xl"></i></div><div><h3 class="text-lg font-bold text-light">'+gData.nama+'</h3><p class="text-sm text-kopAccent font-semibold">'+gData.jenis.toUpperCase()+'</p><p class="text-xs text-muted">'+gData.sekolah+' &bull; NPSN: '+gData.npsn+'</p></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div class="stat-box"><div class="text-xs text-muted">NIP</div><div class="text-sm font-bold text-light mt-1">'+gData.nip+'</div></div><div class="stat-box"><div class="text-xs text-muted">Kelas</div><div class="text-sm font-bold text-kopAccent mt-1">'+(gData.kelas||'1-5')+'</div></div><div class="stat-box"><div class="text-xs text-muted">Rombel</div><div class="text-sm font-bold text-info mt-1">'+gData.rombel+'</div></div><div class="stat-box"><div class="text-xs text-muted">Keamanan</div><div class="text-sm font-bold '+(gData.password?'text-success':'text-warning')+' mt-1">'+(gData.password?'<i class="fas fa-shield-alt mr-1"></i>Terproteksi':'<i class="fas fa-exclamation-triangle mr-1"></i>Tanpa PW')+'</div></div></div></div>';h+='<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">';getGuruKelas().forEach(function(k){h+='<div class="card text-center cursor-pointer hover:brightness-110 transition-all border-l-4 '+(k===activeClass?'border-kopAccent bg-kopAccent/5':'border-border bg-dark/20')+'" onclick="activeClass=\''+k+'\';navTo(\'bank-soal\')"><div class="text-xs text-muted uppercase mb-1">'+k+'</div><div class="text-xl font-bold '+(k===activeClass?'text-kopAccent':'text-light')+'">Rombel '+getGuruRombel()+'</div><div id="dashStat'+k.replace(/\s/g,'')+'" class="text-xs text-muted mt-1">...</div>'+(k===activeClass?'<div class="mt-2"><span class="pulse-dot bg-success inline-block mr-1"></span><span class="text-xs text-success font-bold">AKTIF</span></div>':'')+'</div>'});h+='</div></div>';c.innerHTML=h;getGuruKelas().forEach(function(k){var db=getDB(k);if(!db)return;db.collection('questions').get().then(function(s){var f=[];s.forEach(function(doc){var d=doc.data();if(d.kelas===k)f.push(d)});var el=document.getElementById('dashStat'+k.replace(/\s/g,''));if(el)el.textContent=f.length+' soal'}).catch(function(){})})}
 
 /* ==================== KELOLA TP ==================== */
 function rTP(c){var wl=_currentWriteLock;var h='<div class="fade-in card"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-light">Kelola TP &mdash; <span class="text-kopAccent">'+activeClass+'</span></h3>';if(wl)h+='<span class="text-xs px-2 py-1 rounded bg-danger/15 text-danger font-bold"><i class="fas fa-lock mr-1"></i>Hanya Baca</span>';else h+='<button type="button" onclick="openAddTP()" class="btn-primary text-sm"><i class="fas fa-plus mr-1"></i>Tambah</button>';h+='</div>'+getLockBannerHTML('kelola-tp',wl?'write':'')+filterBar('tp')+'<div id="tpC" class="max-h-[65vh] overflow-y-auto pr-1"></div></div>';c.innerHTML=h;reloadtp()}
@@ -423,13 +362,9 @@ function doCetakNilai(){var mapel=document.getElementById('cnM').value;var kelas
 
 /* ==================== DATA SISWA ==================== */
 function rSiswa(c){var wl=isFeatureLocked('manage_siswa');var readLocked=isFeatureLocked('access_siswa');if(readLocked){c.innerHTML='<div class="fade-in">'+getLockBannerHTML('data-siswa','read')+'</div>';return}_currentWriteLock=wl;var h='<div class="fade-in space-y-4"><div class="card"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-light">Data Siswa &mdash; <span class="text-kopAccent">'+activeClass+' '+getGuruRombel()+'</span></h3>';if(wl)h+='<span class="text-xs px-2 py-1 rounded bg-danger/15 text-danger font-bold"><i class="fas fa-lock mr-1"></i>Hanya Baca</span>';else h+='<button type="button" onclick="openRegSiswa()" class="btn-primary text-sm"><i class="fas fa-user-plus mr-1"></i>Tambah</button>';h+='</div>'+getLockBannerHTML('data-siswa',wl?'write':'')+'<div class="flex gap-2 mb-4"><input type="text" id="cariSiswa" class="input-field text-sm" placeholder="Cari nama/NISN..." oninput="reloadSiswa()"></div><div id="siswaC" class="max-h-[65vh] overflow-y-auto pr-1"></div></div></div>';c.innerHTML=h;reloadSiswa()}
-function reloadSiswa(){var db=getDB(activeClass),ct=document.getElementById('siswaC'),cari=(document.getElementById('cariSiswa')||{}).value||'';if(!db){ct.innerHTML='<p class="text-danger">DB error</p>';return}ct.innerHTML='<p class="text-muted text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i></p>';fetchSiswaRombel().then(function(docs){if(cari){var lc=cari.toLowerCase();docs=docs.filter(function(d){return(d.nama||'').toLowerCase().indexOf(lc)>-1||(d.nisn||'').toLowerCase().indexOf(lc)>-1})}if(!docs.length){ct.innerHTML='<p class="text-muted text-center py-8">Belum ada data siswa.</p>';return}var wl=_currentWriteLock,h='<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-dark/60"><th class="p-2 text-left w-8">No</th><th class="p-2 text-left">NISN</th><th class="p-2 text-left">Nama</th><th class="p-2 text-left">Kelas</th><th class="p-2 text-center w-20">Aksi</th></tr></thead><tbody>';docs.forEach(function(d,i){
-  /* FIX: Gunakan _id yang sekarang sudah tersedia dari fetchSiswaRombel */
-  var docId=d._id||'',coll=d._collection||'siswa';
-  h+='<tr class="border-t border-border hover:bg-dark/30"><td class="p-2 font-bold">'+(i+1)+'</td><td class="p-2 font-mono text-xs">'+(d.nisn||'-')+'</td><td class="p-2 font-semibold">'+(d.nama||'-')+'</td><td class="p-2 text-xs text-muted">'+d.kelas+' '+d.rombel+'</td><td class="p-2 text-center">'+(wl?'<span class="text-xs text-muted"><i class="fas fa-lock"></i></span>':'<button type="button" onclick="delSiswa(\''+docId+'\',\''+coll+'\')" class="text-danger hover:text-white text-xs"><i class="fas fa-trash"></i></button>')+'</td></tr>'});h+='</tbody></table></div><p class="text-xs text-muted mt-2">'+docs.length+' siswa</p>';ct.innerHTML=h}).catch(function(e){ct.innerHTML='<p class="text-danger p-4">'+e.message+'</p>'})}
+function reloadSiswa(){var db=getDB(activeClass),ct=document.getElementById('siswaC'),cari=(document.getElementById('cariSiswa')||{}).value||'';if(!db){ct.innerHTML='<p class="text-danger">DB error</p>';return}ct.innerHTML='<p class="text-muted text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i></p>';fetchSiswaRombel().then(function(docs){if(cari){var lc=cari.toLowerCase();docs=docs.filter(function(d){return(d.nama||'').toLowerCase().indexOf(lc)>-1||(d.nisn||'').toLowerCase().indexOf(lc)>-1})}if(!docs.length){ct.innerHTML='<p class="text-muted text-center py-8">Belum ada data siswa.</p>';return}var wl=_currentWriteLock,h='<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-dark/60"><th class="p-2 text-left w-8">No</th><th class="p-2 text-left">NISN</th><th class="p-2 text-left">Nama</th><th class="p-2 text-left">Kelas</th><th class="p-2 text-center w-20">Aksi</th></tr></thead><tbody>';docs.forEach(function(d,i){h+='<tr class="border-t border-border hover:bg-dark/30"><td class="p-2 font-bold">'+(i+1)+'</td><td class="p-2 font-mono text-xs">'+(d.nisn||'-')+'</td><td class="p-2 font-semibold">'+(d.nama||'-')+'</td><td class="p-2 text-xs text-muted">'+d.kelas+' '+d.rombel+'</td><td class="p-2 text-center">'+(wl?'<span class="text-xs text-muted"><i class="fas fa-lock"></i></span>':'<button type="button" onclick="delSiswa(\''+d._id+'\',\''+d._collection+'\')" class="text-danger hover:text-white text-xs"><i class="fas fa-trash"></i></button>')+'</td></tr>'});h+='</tbody></table></div><p class="text-xs text-muted mt-2">'+docs.length+' siswa</p>';ct.innerHTML=h}).catch(function(e){ct.innerHTML='<p class="text-danger p-4">'+e.message+'</p>'})}
 function openRegSiswa(){if(_currentWriteLock){showToast('Akses tulis dikunci oleh admin','error');return}var h='<h3 class="font-bold text-light mb-4">Registrasi Siswa</h3><div class="space-y-3"><div><label class="text-xs text-muted block mb-1">NISN</label><input type="text" id="sNISN" class="input-field" placeholder="Nomor Induk Siswa Nasional"></div><div><label class="text-xs text-muted block mb-1">Nama Lengkap</label><input type="text" id="sNama" class="input-field" placeholder="Nama siswa"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs text-muted block mb-1">Kelas</label><input type="text" class="input-field" value="'+activeClass+'" readonly></div><div><label class="text-xs text-muted block mb-1">Rombel</label><input type="text" class="input-field" value="'+getGuruRombel()+'" readonly></div></div></div><div class="mt-6 flex justify-end gap-3"><button type="button" onclick="closeModal()" class="btn-secondary">Batal</button><button type="button" onclick="saveSiswa()" class="btn-primary">Simpan</button></div>';openModal(h)}
-function saveSiswa(){if(_currentWriteLock){showToast('Akses tulis dikunci','error');return}var db=getDB(activeClass);if(!db){showToast('DB error','error');return}var nisn=document.getElementById('sNISN').value.trim(),nama=document.getElementById('sNama').value.trim();if(!nisn||!nama){showToast('NISN dan Nama wajib diisi','error');return}cekNISN(nisn).then(function(dup){if(dup){showToast('NISN sudah terdaftar di rombel ini','error');return}return db.collection('siswa').add({nisn:nisn,nama:nama,kelas:activeClass,rombel:getGuruRombel(),guruNip:gData.nip,guruNama:gData.nama,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}).then(function(){showToast('Siswa didaftarkan');closeModal();reloadSiswa()}).catch(function(e){showToast('Gagal: '+e.message,'error')})}
-/* FIX: delSiswa sekarang menerima collectionName agar hapus ke collection yang benar */
+function saveSiswa(){if(_currentWriteLock){showToast('Akses tulis dikunci','error');return}var db=getDB(activeClass);if(!db){showToast('DB error','error');return}var nisn=document.getElementById('sNISN').value.trim(),nama=document.getElementById('sNama').value.trim();if(!nisn||!nama){showToast('NISN dan Nama wajib diisi','error');return}cekNISN(nisn).then(function(dup){if(dup){showToast('NISN sudah terdaftar di rombel ini','error');return}return db.collection('siswa').add({nisn:nisn,nama:nama,kelas:activeClass,rombel:getGuruRombel(),guruNip:gData.nip,guruNama:gData.nama,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}).then(function(){showToast('Siswa didaftarkan');closeModal();reloadSiswa()}).catch(function(e){showToast('Gagal: '+e.message,'error')})}
 function delSiswa(id,collectionName){if(_currentWriteLock){showToast('Akses tulis dikunci oleh admin','error');return}if(!id){showToast('ID dokumen tidak ditemukan','error');return}if(!confirm('Hapus siswa ini?'))return;var coll=collectionName||'siswa';getDB(activeClass).collection(coll).doc(id).delete().then(function(){showToast('Dihapus');reloadSiswa()}).catch(function(e){showToast('Gagal: '+e.message,'error')})}
 
 /* ==================== TOKEN UJIAN ==================== */
